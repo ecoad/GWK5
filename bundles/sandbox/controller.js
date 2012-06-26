@@ -30,7 +30,7 @@ module.exports.createRoutes = function(serviceLocator, bundleViewPath) {
   }
 
   function postVideoToServerController(req, res) {
-    snapshots.push(req.body.data);
+    console.log(req.body.data);
     res.send('ok');
   }
 };

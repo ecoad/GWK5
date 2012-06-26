@@ -1,76 +1,125 @@
 h1 
   a(href='/') GWK5
 h2 [video to server]
-label
-  | Output: 
-  textarea(name='output',disabled)
 div
+  h4 Camera
   video(autoplay)
-  img#snapshot
+  a#record(href='#') Record
+  span#time
+  img#preview
+div
+  h4 Previous
+  div#previous-snapshots
+    each snapshot in []
+      img(src='#{snapshot}')
 script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js')
 script(src='/js/user-media-util.js')
 script
   var outputElement = $("textarea")
     , videoElement = $("video")
-    , snapshotElement = $("#snapshot")
+    , previousSnapshotsElement = $("#previous-snapshots")
+    , recordElement = $("#record").click(onRecordClick)
+    , previewElement = $("#preview")
+    , timeElement = $("#time")
     , userMediaUtil = new UserMediaUtil()
     , snapShotCanvas = $('<canvas />')
     , cameraHeight = 480
     , cameraWidth = 640
     , resampledWidth = 300
     , resampledHeight = 225
+    , snapshotData = []
+    , recordTimer
+    , videoLength = 3
+    , framesPerSecond = 10
+    , currentFrame = 1
+    , videoFileSize = 0
     ;
 
-  if (userMediaUtil.hasGetUserMedia()) {
-    outputElement.val('Browser supports getUserMedia: Yes!');
-  } else {
-    outputElement.val('Browser supports getUserMedia: No!');
-  }
-
-  navigator.getUserMedia('video', onSuccess, onError);
-
-  function onSuccess(stream) {
+  function onUserMediaSuccess(stream) {
     videoElement[0].src = window.URL.createObjectURL(stream);
-    
-    var onMetaData = function(event) {
-      cameraWidth = event.target.videoWidth;
-      cameraHeight = event.target.videoHeight;
-      if (cameraWidth > cameraHeight) {
-        resampledHeight = resampledWidth * (cameraHeight / cameraWidth);
-      } else {
-        resampledWidth = resampledHeight * (cameraWidth / cameraHeight);
-      }
-
-      videoElement.css({width: resampledWidth, height: resampledHeight});
-      
-      console.log('orig','w:'+cameraWidth, 'h:'+cameraHeight);
-      console.log('resam','w:'+resampledWidth, 'h:'+resampledHeight);
-
-      snapShotCanvas.attr('width', resampledWidth);
-      snapShotCanvas.attr('height', resampledHeight);
-
-      function draw(v, w, h) {
-        snapShotCanvas[0].getContext('2d').drawImage(v, 0, 0, w, h);
-
-        //var stringData=snapShotCanvas[0].toDataURL(); // 136
-        //var stringData=snapShotCanvas[0].toDataURL('image/jpeg', 0.4); // 2.9
-        var stringData=snapShotCanvas[0].toDataURL('image/webp'); // 2.8
-        snapshotElement.attr('src', stringData);
-
-      }
-      setTimeout(function(){ draw(videoElement[0], resampledWidth, resampledHeight); }, 2000);
-    };
-
     videoElement.on('loadedmetadata', onMetaData);
 
-    videoElement.onerror = function (error) {
+    videoElement[0].onerror = function (error) {
       stream.stop();
       console.log(error);
     };
   }
 
-  function onError(error) {
+  function onMetaData(event) {
+    cameraWidth = event.target.videoWidth;
+    cameraHeight = event.target.videoHeight;
+    if (cameraWidth > cameraHeight) {
+      resampledHeight = resampledWidth * (cameraHeight / cameraWidth);
+    } else {
+      resampledWidth = resampledHeight * (cameraWidth / cameraHeight);
+    }
+
+    videoElement.css({width: resampledWidth, height: resampledHeight});
+    
+    console.log('orig','w:'+cameraWidth, 'h:'+cameraHeight);
+    console.log('resam','w:'+resampledWidth, 'h:'+resampledHeight);
+
+    snapShotCanvas.attr('width', resampledWidth);
+    snapShotCanvas.attr('height', resampledHeight);
+  };
+
+  function draw(v, w, h) {
+    console.log('draw');
+    if ((currentFrame % framesPerSecond) !== 0) {
+      timeElement.html(Math.round(currentFrame / framesPerSecond));
+    }
+
+    if (currentFrame++ > (videoLength * framesPerSecond)) {
+      clearInterval(recordTimer);
+      console.log('return');
+      onDrawComplete();
+      return;
+    }
+
+    snapShotCanvas[0].getContext('2d').drawImage(v, 0, 0, w, h);
+    var frameData = snapShotCanvas[0].toDataURL('image/webp');
+    snapshotData.push(frameData);
+    videoFileSize += frameData.length;
+  }
+
+  function onUserMediaError(error) {
     console.error(error);
     console.error('An error occurred: [CODE ' + error.code + ']');
     return;
   }
+
+  function onRecordClick(event) {
+    var interval = 1000 / framesPerSecond;
+    console.log('interval' + interval);
+    recordTimer = setInterval(function() {draw(videoElement[0], resampledWidth, resampledHeight)}, interval);
+    event.preventDefault();
+  }
+
+  function onDrawComplete() {
+    showPreview();
+    recordElement.html("Send?").unbind('click', onRecordClick).bind('click',onSendClick);
+  }
+
+  function showPreview() {
+    var previewFrameIndex = 1;
+    setInterval(function() {
+      previewElement.attr('src', snapshotData[previewFrameIndex++]);
+      if (previewFrameIndex > snapshotData.length) {
+        previewFrameIndex = 0;
+      }
+    }, 100);
+    timeElement.html('file size: ' + Math.round(videoFileSize / 1024) + 'kB');
+  }
+
+  function onSendClick(event) {
+    $.post('/sandbox/post-to-server', {data: snapshotData}, onSendSuccess);
+    recordElement.html("&hellip;sending").unbind('click', onSendClick);
+    event.preventDefault();
+  }
+
+  function onSendSuccess(response) {
+    console.log('response', response);
+    recordElement.html("sent");
+  }
+
+  navigator.getUserMedia('video', onUserMediaSuccess, onUserMediaError);
