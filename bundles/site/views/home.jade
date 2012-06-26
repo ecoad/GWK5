@@ -1,1 +1,17 @@
-img(src=versionPath('/images/placeholder.jpg'))
+h1 GWK5
+p Sandboxing
+label
+  | Browser supported (getUserMedia): 
+  input(name='supported')
+script
+  function hasGetUserMedia() {
+    return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia || navigator.msGetUserMedia);
+  }
+
+  var supportedElement = document.getElementsByName("supported")[0];
+  if (hasGetUserMedia()) {
+    supportedElement.value = "Yes!";
+  } else {
+    supportedElement.value = "No.";
+  }
