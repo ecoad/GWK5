@@ -17,8 +17,8 @@ script
     , snapShotCanvas = $('<canvas />')
     , cameraHeight = 480
     , cameraWidth = 640
-    , resampledWidth = 200
-    , resampledHeight = 150
+    , resampledWidth = 300
+    , resampledHeight = 225
     ;
 
   if (userMediaUtil.hasGetUserMedia()) {
@@ -32,8 +32,7 @@ script
   function onSuccess(stream) {
     videoElement[0].src = window.URL.createObjectURL(stream);
     
-    //Opera only
-    videoElement[0].onloadedmetadata = function(event) {
+    var onMetaData = function(event) {
       cameraWidth = event.target.videoWidth;
       cameraHeight = event.target.videoHeight;
       if (cameraWidth > cameraHeight) {
@@ -59,9 +58,10 @@ script
         snapshotElement.attr('src', stringData);
 
       }
-
       setTimeout(function(){ draw(videoElement[0], resampledWidth, resampledHeight); }, 2000);
     };
+
+    videoElement.on('loadedmetadata', onMetaData);
 
     videoElement.onerror = function (error) {
       stream.stop();
