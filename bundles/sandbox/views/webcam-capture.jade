@@ -4,29 +4,65 @@ h2 [webcam capture]
 label
   | Output: 
   textarea(name='output',disabled)
-video(autoplay)
-img#snapshot
+div
+  video(autoplay)
+  img#snapshot
+script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js')
 script(src='/js/user-media-util.js')
 script
-  var outputElement = document.getElementsByName("output")[0]
-    , videoElement = document.getElementsByTagName('video')[0]
-    , snapshotElement = document.getElementById('snapshot')
+  var outputElement = $("textarea")
+    , videoElement = $("video")
+    , snapshotElement = $("#snapshot")
     , userMediaUtil = new UserMediaUtil()
-    , back = document.createElement('canvas')
-    , backcontext = back.getContext('2d')
+    , snapShotCanvas = $('<canvas />')
+    , cameraHeight = 480
+    , cameraWidth = 640
+    , resampledWidth = 200
+    , resampledHeight = 150
     ;
+
   if (userMediaUtil.hasGetUserMedia()) {
-    outputElement.value = "Browser supports getUserMedia: Yes!";
+    outputElement.val('Browser supports getUserMedia: Yes!');
   } else {
-    outputElement.value = "Browser supports getUserMedia: No!";
+    outputElement.val('Browser supports getUserMedia: No!');
   }
 
   navigator.getUserMedia('video', onSuccess, onError);
-  //navigator.getUserMedia({audio: true, video: false}, onSuccess, onError);
 
   function onSuccess(stream) {
-    videoElement.src = window.URL.createObjectURL(stream);
-    //videoElement.src = stream;
+    videoElement[0].src = window.URL.createObjectURL(stream);
+    
+    //Opera only
+    videoElement[0].onloadedmetadata = function(event) {
+      cameraWidth = event.target.videoWidth;
+      cameraHeight = event.target.videoHeight;
+      if (cameraWidth > cameraHeight) {
+        resampledHeight = resampledWidth * (cameraHeight / cameraWidth);
+      } else {
+        resampledWidth = resampledHeight * (cameraWidth / cameraHeight);
+      }
+
+      videoElement.css({width: resampledWidth, height: resampledHeight});
+      
+      console.log('orig','w:'+cameraWidth, 'h:'+cameraHeight);
+      console.log('resam','w:'+resampledWidth, 'h:'+resampledHeight);
+
+      snapShotCanvas.attr('width', resampledWidth);
+      snapShotCanvas.attr('height', resampledHeight);
+
+      function draw(v, w, h) {
+        snapShotCanvas[0].getContext('2d').drawImage(v, 0, 0, w, h);
+
+        //var stringData=snapShotCanvas[0].toDataURL(); // 136
+        //var stringData=snapShotCanvas[0].toDataURL('image/jpeg', 0.4); // 2.9
+        var stringData=snapShotCanvas[0].toDataURL('image/webp'); // 2.8
+        snapshotElement.attr('src', stringData);
+
+      }
+
+      setTimeout(function(){ draw(videoElement[0], resampledWidth, resampledHeight); }, 2000);
+    };
+
     videoElement.onerror = function (error) {
       stream.stop();
       console.log(error);
@@ -38,23 +74,3 @@ script
     console.error('An error occurred: [CODE ' + error.code + ']');
     return;
   }
-
-  cw = 320;
-  ch = 240;
-  back.width = cw;
-  back.height = ch;
-  draw(videoElement, backcontext, cw, ch);
-
-  function draw(v, bc, w, h) {
-
-    bc.drawImage(v, 0, 0, w, h);
-
-    //var stringData=back.toDataURL(); // 136
-    //var stringData=back.toDataURL('image/jpeg', 0.4); // 2.9
-    var stringData=back.toDataURL('image/webp'); // 2.8
-    snapshotElement.src = stringData;
-
-    // Start over! 10 frames a second = 100milliseconds
-    //setTimeout(function(){ draw(v, bc, w, h); }, 2000);
-  }
-  setTimeout(function(){ draw(videoElement, backcontext, cw, ch); }, 2000);
