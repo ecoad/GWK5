@@ -1,0 +1,76 @@
+h1 
+  a(href='/') GWK5
+h2 [video to server]
+label
+  | Output: 
+  textarea(name='output',disabled)
+div
+  video(autoplay)
+  img#snapshot
+script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js')
+script(src='/js/user-media-util.js')
+script
+  var outputElement = $("textarea")
+    , videoElement = $("video")
+    , snapshotElement = $("#snapshot")
+    , userMediaUtil = new UserMediaUtil()
+    , snapShotCanvas = $('<canvas />')
+    , cameraHeight = 480
+    , cameraWidth = 640
+    , resampledWidth = 300
+    , resampledHeight = 225
+    ;
+
+  if (userMediaUtil.hasGetUserMedia()) {
+    outputElement.val('Browser supports getUserMedia: Yes!');
+  } else {
+    outputElement.val('Browser supports getUserMedia: No!');
+  }
+
+  navigator.getUserMedia('video', onSuccess, onError);
+
+  function onSuccess(stream) {
+    videoElement[0].src = window.URL.createObjectURL(stream);
+    
+    var onMetaData = function(event) {
+      cameraWidth = event.target.videoWidth;
+      cameraHeight = event.target.videoHeight;
+      if (cameraWidth > cameraHeight) {
+        resampledHeight = resampledWidth * (cameraHeight / cameraWidth);
+      } else {
+        resampledWidth = resampledHeight * (cameraWidth / cameraHeight);
+      }
+
+      videoElement.css({width: resampledWidth, height: resampledHeight});
+      
+      console.log('orig','w:'+cameraWidth, 'h:'+cameraHeight);
+      console.log('resam','w:'+resampledWidth, 'h:'+resampledHeight);
+
+      snapShotCanvas.attr('width', resampledWidth);
+      snapShotCanvas.attr('height', resampledHeight);
+
+      function draw(v, w, h) {
+        snapShotCanvas[0].getContext('2d').drawImage(v, 0, 0, w, h);
+
+        //var stringData=snapShotCanvas[0].toDataURL(); // 136
+        //var stringData=snapShotCanvas[0].toDataURL('image/jpeg', 0.4); // 2.9
+        var stringData=snapShotCanvas[0].toDataURL('image/webp'); // 2.8
+        snapshotElement.attr('src', stringData);
+
+      }
+      setTimeout(function(){ draw(videoElement[0], resampledWidth, resampledHeight); }, 2000);
+    };
+
+    videoElement.on('loadedmetadata', onMetaData);
+
+    videoElement.onerror = function (error) {
+      stream.stop();
+      console.log(error);
+    };
+  }
+
+  function onError(error) {
+    console.error(error);
+    console.error('An error occurred: [CODE ' + error.code + ']');
+    return;
+  }
