@@ -3,7 +3,8 @@ var express = require('express')
   , app = express.createServer()
   , properties = require('./properties').getProperties()
   , bundled = require('bundled')(serviceLocator)
-  , versionator = require('versionator').create(properties.version);
+  , versionator = require('versionator').create(properties.version)
+  ;
 
 app.configure(function() {
   app.set('views', __dirname + '/views');
@@ -21,9 +22,10 @@ app.helpers({
   versionPath: versionator.versionPath
 });
 
-serviceLocator.register('app', app);
-serviceLocator.register('logger', console);
-
+serviceLocator
+  .register('app', app)
+  .register('logger', console)
+  ;
 
 bundled.addBundles(__dirname + properties.bundlesLocation, ['site']);
 bundled.addBundles(__dirname + properties.bundlesLocation, ['sandbox']);

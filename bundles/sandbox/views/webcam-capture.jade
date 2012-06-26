@@ -1,17 +1,30 @@
 h1 GWK5
 h2 [webcam capture]
 label
-  | Browser supported (getUserMedia): 
-  input(name='supported',disabled)
+  | Output: 
+  textarea(name='output',disabled)
+video(autoplay)
+script(src='/js/user-media-util.js')
 script
-  function hasGetUserMedia() {
-    return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia || navigator.msGetUserMedia);
+  var outputElement = document.getElementsByName("output")[0]
+    , videoElement = document.getElementsByTagName('video')[0]
+    , userMediaUtil = new UserMediaUtil()
+    ;
+  if (userMediaUtil.hasGetUserMedia()) {
+    outputElement.value = "Browser supports getUserMedia: Yes!";
+  } else {
+    outputElement.value = "Browser supports getUserMedia: No!";
   }
 
-  var supportedElement = document.getElementsByName("supported")[0];
-  if (hasGetUserMedia()) {
-    supportedElement.value = "Yes!";
-  } else {
-    supportedElement.value = "No.";
+  navigator.getUserMedia('video', onSuccess, onError);
+
+  function onSuccess(stream) {
+    console.log(stream);
+    videoElement.src = window.URL.createObjectURL(stream);
+    //videoElement.src = stream;
+  }
+
+  function onError(error) {
+    console.error('An error occurred: [CODE ' + error.code + ']');
+    return;
   }
