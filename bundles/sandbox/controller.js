@@ -15,7 +15,7 @@ module.exports.createRoutes = function(serviceLocator, bundleViewPath) {
   }
 
   function getPostToServer(req, res) {
-    res.render(bundleViewPath + '/post-to-server', {snapshots: snapshots.slice(0, 10).reverse()});
+    res.render(bundleViewPath + '/post-to-server', {snapshots: snapshots.slice(snapshots.length - 10, 10).reverse()});
   }
 
   function postPostToServer(req, res) {
