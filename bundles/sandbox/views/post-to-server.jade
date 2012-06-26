@@ -1,0 +1,85 @@
+h1 
+  a(href='/') GWK5
+h2 [post to server]
+div
+  h4 Camera
+  video(autoplay)
+  img#snapshot
+  a#send(href='#') Send
+div
+  h4 Previous
+  div#previous-snapshots
+    each snapshot in snapshots
+      img(src='#{snapshot}')
+script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js')
+script(src='/js/user-media-util.js')
+script
+  var outputElement = $("textarea")
+    , videoElement = $("video")
+    , previousSnapshotsElement = $("#previous-snapshots")
+    , sendElement = $("#send").click(onSendClick)
+    , userMediaUtil = new UserMediaUtil()
+    , snapShotCanvas = $('<canvas />')
+    , cameraHeight = 480
+    , cameraWidth = 640
+    , resampledWidth = 300
+    , resampledHeight = 225
+    , snapshotData
+    ;
+
+  function onSuccess(stream) {
+    videoElement[0].src = window.URL.createObjectURL(stream);
+    videoElement.on('loadedmetadata', onMetaData);
+
+    videoElement[0].onerror = function (error) {
+      stream.stop();
+      console.log(error);
+    };
+  }
+
+  function onMetaData(event) {
+    cameraWidth = event.target.videoWidth;
+    cameraHeight = event.target.videoHeight;
+    if (cameraWidth > cameraHeight) {
+      resampledHeight = resampledWidth * (cameraHeight / cameraWidth);
+    } else {
+      resampledWidth = resampledHeight * (cameraWidth / cameraHeight);
+    }
+
+    videoElement.css({width: resampledWidth, height: resampledHeight});
+    
+    console.log('orig','w:'+cameraWidth, 'h:'+cameraHeight);
+    console.log('resam','w:'+resampledWidth, 'h:'+resampledHeight);
+
+    snapShotCanvas.attr('width', resampledWidth);
+    snapShotCanvas.attr('height', resampledHeight);
+  };
+
+  function draw(v, w, h) {
+    snapShotCanvas[0].getContext('2d').drawImage(v, 0, 0, w, h);
+
+    snapshotData = snapShotCanvas[0].toDataURL('image/webp');
+    onDrawComplete();
+  }
+
+  function onError(error) {
+    console.error(error);
+    console.error('An error occurred: [CODE ' + error.code + ']');
+    return;
+  }
+
+  function onSendClick(event) {
+    draw(videoElement[0], resampledWidth, resampledHeight);
+    event.preventDefault();
+  }
+
+  function onDrawComplete() {
+    $.post('/sandbox/post-to-server', {data: snapshotData}, onSendSuccess);
+  }
+
+  function onSendSuccess(response) {
+    console.log('response', response);
+    $("<img>").attr('src', snapshotData).prependTo(previousSnapshotsElement);
+  }
+
+  navigator.getUserMedia('video', onSuccess, onError);

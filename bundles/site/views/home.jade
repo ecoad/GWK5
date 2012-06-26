@@ -3,6 +3,8 @@ h4 Sandbox Demoes
 ul
   li 
     a(href='/sandbox/webcam-capture') [webcam capture]
+  li
+    a(href='/sandbox/post-to-server') [post to server]
 h4 Supported Software
 ul
   li 
@@ -15,14 +17,12 @@ ul
 label
   | Browser supported (getUserMedia): 
   input(name='supported',disabled)
+script(src='/js/user-media-util.js')
 script
-  function hasGetUserMedia() {
-    return !!(navigator.getUserMedia || navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia || navigator.msGetUserMedia);
-  }
+  var supportedElement = document.getElementsByName("supported")[0]
+    , userMediaUtil = new UserMediaUtil();
 
-  var supportedElement = document.getElementsByName("supported")[0];
-  if (hasGetUserMedia()) {
+  if (userMediaUtil.hasGetUserMedia()) {
     supportedElement.value = "Yes!";
   } else {
     supportedElement.value = "No.";
