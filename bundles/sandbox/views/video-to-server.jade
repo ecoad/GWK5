@@ -112,7 +112,7 @@ script
   }
 
   function onSendClick(event) {
-    $.post('/sandbox/post-to-server', {data: snapshotData}, onSendSuccess);
+    $.post('/sandbox/video-to-server', {data: snapshotData}, onSendSuccess);
     recordElement.html("&hellip;sending").unbind('click', onSendClick);
     event.preventDefault();
   }
