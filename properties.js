@@ -2,7 +2,8 @@ var _ = require('underscore');
 
 var properties = {
   version: '0.0.1',
-  debug: true
+  debug: true,
+  bundlesLocation: '/bundles/'
 };
 
 var environmentProperties = {

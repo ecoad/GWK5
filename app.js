@@ -24,7 +24,9 @@ app.helpers({
 serviceLocator.register('app', app);
 serviceLocator.register('logger', console);
 
-bundled.addBundles(__dirname + '/bundles/', ['site']);
+
+bundled.addBundles(__dirname + properties.bundlesLocation, ['site']);
+bundled.addBundles(__dirname + properties.bundlesLocation, ['sandbox']);
 bundled.initialize();
 
 app.listen(3000, function(){
