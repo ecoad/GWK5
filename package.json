@@ -1,0 +1,14 @@
+{
+    "name": "GWK5"
+  , "version": "0.0.1"
+  , "private": true
+  , "dependencies": {
+      "express": "2.5.8"
+    , "stylus": ">= 0.0.1"
+    , "jade": ">= 0.0.1"
+    , "versionator": "0.2.0"
+    , "service-locator": "~0.0"
+    , "underscore": "~1.2"
+    , "bundled": "~0.0"
+  }
+}
