@@ -7,13 +7,18 @@ ul
     a(href='/sandbox/post-to-server') [post to server]
 h4 Supported Software
 ul
-  li 
-    a(href='https://play.google.com/store/apps/details?id=com.opera.browser&hl=en') Opera mobile 12
-    | &nbsp;(camera support on Android)
-  li 
-    a(href='https://www.google.com/intl/en/chrome/browser/') Chrome
-    | &nbsp;(about:flags => "Enable MediaStream")
-  li Opera dev build
+  li desktop
+    ul
+      li 
+        a(href='https://www.google.com/intl/en/chrome/browser/') Chrome
+        | &nbsp;(about:flags => "Enable MediaStream")
+      li 
+        a(href='http://dev.opera.com/articles/view/labs-more-fun-using-the-web-with-getusermedia-and-native-pages/') Opera dev build
+  li mobile
+    ul
+      li 
+        a(href='https://play.google.com/store/apps/details?id=com.opera.browser&hl=en') Opera mobile 12
+        | &nbsp;(camera support on Android)
 label
   | Browser supported (getUserMedia): 
   input(name='supported',disabled)
