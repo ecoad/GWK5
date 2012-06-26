@@ -6,6 +6,7 @@ var express = require('express')
   , versionator = require('versionator').create(properties.version)
   ;
 
+
 app.configure(function() {
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
@@ -31,6 +32,6 @@ bundled.addBundles(__dirname + properties.bundlesLocation, ['site']);
 bundled.addBundles(__dirname + properties.bundlesLocation, ['sandbox']);
 bundled.initialize();
 
-app.listen(3000, function(){
+app.listen(3001, function(){
   serviceLocator.logger.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
