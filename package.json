@@ -10,5 +10,6 @@
     , "service-locator": "~0.0"
     , "underscore": "~1.2"
     , "bundled": "~0.0"
+    , "markdown": "~0.3"
   }
 }
